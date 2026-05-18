@@ -54,7 +54,7 @@ const TaskDetail = () => {
             </button>
             <div className="card bg-base-300 shadow-xl rounded-2xl">
                 <div className="card-body gap-4">
-                    {/* Status Badge */}
+
                     <div className="flex justify-between items-center">
                         <span className={`badge text-xs font-semibold ${
                             task.status === "done"

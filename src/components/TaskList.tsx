@@ -165,7 +165,7 @@ const TaskList = () => {
 
                             <h2
                                 className="card-title text-lg mt-2 cursor-pointer hover:text-blue-400"
-                                onClick={() => navigate("/task/" + task._id)}
+                                onClick={() => navigate("/single/task/" + task._id)}
                             >
                                 {task.title}
                             </h2>
