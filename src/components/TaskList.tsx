@@ -3,7 +3,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { AppDispatch, RootState } from "../utils/appStore";
-import { setTask } from "../utils/taskSlice";
+import { setTask, removeTask } from "../utils/taskSlice";
 import BASE_URL from "../utils/constants";
 import type { Task } from "../utils/types";
 import EditTaskModal from "./EditTask";
@@ -12,22 +12,63 @@ const TaskList = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const tasks = useSelector((store: RootState) => store.task);
-    const [error, setError] = useState<string>("");
-    const [editTask, setEditTask] = useState<Task | null>(null);
+    const [ error, setError ] = useState<string>("");
+    const [ editTask, setEditTask ] = useState<Task | null>(null);
+    const [ deletingId, setDeletingId ] = useState<string | null>(null);
+    const [ toast, setToast ] = useState<string>("");
+    const [ search, setSearch ] = useState<string>("")
 
-    const fetchTasks = async () => {
+    const showToast = (message: string) => {
+        setToast(message);
+        setTimeout(() => setToast(""), 3000);
+    };
+
+    const fetchTasks = async (searchQuery: string = "") => {
         try {
             setError("");
-            const res = await axios.get(BASE_URL + "/all/tasks", {
-                withCredentials: true,
+
+            const url = searchQuery ? BASE_URL + "/all/tasks?search=" + searchQuery : BASE_URL + "/all/tasks";
+
+            const res = await axios.get(url, {
+                withCredentials: true
             });
+
             dispatch(setTask(res.data.data));
         } catch(err) {
             if(axios.isAxiosError(err)) {
                 setError(err.response?.data?.message || "Failed to fetch tasks");
-            }
-        }
+            };
+        };
     };
+
+    const handleDelete = async (taskId: string) => {
+        const confirmed = window.confirm("Are you sure want to delete this task?");
+        if(!confirmed) return;
+        try{
+            setDeletingId(taskId);
+
+            dispatch(removeTask(taskId));
+
+            await axios.delete(BASE_URL + "/delete/task/" + taskId, {
+                withCredentials: true
+            });
+            showToast("Task deleted successfully");
+        }catch(err) {
+            fetchTasks();
+            if(axios.isAxiosError(err)){
+                showToast(err.response?.data?.message || "Failed to delete task");
+            };
+        } finally{
+            setDeletingId(null);
+        };
+    };
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchTasks(search);
+        },500);
+        return () => clearTimeout(timer);
+    }, [search]);
 
     useEffect(() => {
         fetchTasks();
@@ -51,7 +92,25 @@ const TaskList = () => {
 
     return (
         <div className="max-w-5xl mx-auto my-10 px-4">
-            <h1 className="text-2xl font-bold mb-6">📋 My Tasks ({tasks.length})</h1>
+            {toast && (
+                <div className="toast toast-top toast-center z-50">
+                    <div className="alert alert-success shadow-lg">
+                        <span>{toast}</span>
+                    </div>
+                </div>
+            )}
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h1 className="text-2xl font-bold">
+                    📋 My Tasks ({tasks.length})
+                </h1>
+                <input
+                    type="text"
+                    placeholder="🔍 Search tasks..."
+                    className="input input-md w-full md:w-72 bg-base-200"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tasks.map((task) => (
                     <div
@@ -94,6 +153,13 @@ const TaskList = () => {
                                     onClick={() => setEditTask(task)}
                                 >
                                     ✏️ Edit
+                                </button>
+                                <button
+                                    className="btn btn-sm bg-red-500 hover:bg-red-600 text-white rounded-full px-4"
+                                    onClick={() => handleDelete(task._id || "")}
+                                    disabled={deletingId === task._id}
+                                >
+                                    {deletingId === task._id ? "..." : "🗑️ Delete"}
                                 </button>
                             </div>
                         </div>

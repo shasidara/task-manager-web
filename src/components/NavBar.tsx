@@ -55,9 +55,6 @@ const NavBar = () => {
                                 <Link to="/task">📋Create Task</Link>
                             </li>
                             <li>
-                                <Link to="/all/tasks">📋 All Tasks</Link>
-                            </li>
-                            <li>
                                 <a onClick={handleLogout} className="text-red-400">
                                     Logout
                                 </a>
