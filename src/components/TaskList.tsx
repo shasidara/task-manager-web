@@ -7,6 +7,7 @@ import { setTask, removeTask } from "../utils/taskSlice";
 import BASE_URL from "../utils/constants";
 import type { Task } from "../utils/types";
 import EditTaskModal from "./EditTask";
+import { Link } from "react-router-dom";
 
 const TaskList = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -16,7 +17,8 @@ const TaskList = () => {
     const [ editTask, setEditTask ] = useState<Task | null>(null);
     const [ deletingId, setDeletingId ] = useState<string | null>(null);
     const [ toast, setToast ] = useState<string>("");
-    const [ search, setSearch ] = useState<string>("")
+    const [ search, setSearch ] = useState<string>("");
+    const [ loading, setLoading ] = useState<boolean>(true);
 
     const showToast = (message: string) => {
         setToast(message);
@@ -25,6 +27,7 @@ const TaskList = () => {
 
     const fetchTasks = async (searchQuery: string = "") => {
         try {
+            setLoading(true);
             setError("");
 
             const url = searchQuery ? BASE_URL + "/all/tasks?search=" + searchQuery : BASE_URL + "/all/tasks";
@@ -39,7 +42,9 @@ const TaskList = () => {
             if(axios.isAxiosError(err)) {
                 setError(err.response?.data?.message || "Failed to fetch tasks");
             };
-        };
+        }finally{
+            setLoading(false)
+        }
     };
 
     const handleDelete = async (taskId: string) => {
@@ -75,21 +80,42 @@ const TaskList = () => {
         fetchTasks();
     }, []);
 
+    if (loading) {
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-base-100 gap-4">
+            <span className="loading loading-spinner loading-lg text-blue-500"></span>
+            <p className="text-sm text-gray-400">Fetching your tasks...</p>
+        </div>
+    )};
+
     if (error) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <p className="text-red-500 text-lg">{error}</p>
-            </div>
-        );
-    }
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-base-100 gap-4">
+            <div className="text-4xl">⚠️</div>
+            <p className="text-red-500 text-lg">{error}</p>
+            <button
+                className="btn bg-blue-500 text-white rounded-full px-6"
+                onClick={() => fetchTasks()}
+            >
+                Try Again
+            </button>
+        </div>
+    )};
 
     if (tasks.length === 0) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <p className="text-gray-400 text-lg">No tasks yet. Create one! ➕</p>
-            </div>
-        );
-    }
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-base-100 gap-4">
+            <div className="text-5xl">📋</div>
+            <p className="text-gray-400 text-lg">No tasks yet!</p>
+            <Link
+                to="/task"
+                className="btn bg-blue-500 text-white rounded-full px-6"
+            >
+                ➕ Create your first task
+            </Link>
+        </div>
+    );
+}
 
     return (
         <div className="max-w-5xl mx-auto my-10 px-4">
