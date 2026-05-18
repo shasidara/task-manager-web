@@ -48,7 +48,7 @@ const TaskDetail = () => {
         <div className="max-w-lg mx-auto my-10 px-4">
             <button
                 className="btn btn-ghost mb-4"
-                onClick={() => navigate("/all/tasks")}
+                onClick={() => navigate("/")}
             >
                 ← Back to Tasks
             </button>
