@@ -33,7 +33,8 @@ const TaskList = () => {
                 withCredentials: true
             });
 
-            dispatch(setTask(res.data.data));
+            const data = Array.isArray(res.data.data) ? res.data.data : [];
+            dispatch(setTask(data));
         } catch(err) {
             if(axios.isAxiosError(err)) {
                 setError(err.response?.data?.message || "Failed to fetch tasks");
