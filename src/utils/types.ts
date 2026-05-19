@@ -3,6 +3,7 @@ export interface Task {
     title: string;
     description?: string;
     status: "to-do" | "in-progress" | "done";
+    targetDate?: string;
     createdAt?: string;
     updatedAt?: string;
 }

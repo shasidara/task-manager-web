@@ -18,6 +18,7 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
     const [ status, setStatus ] = useState<"to-do" | "in-progress" | "done">(task.status);
     const [ error, setError ] = useState<string>("");
     const dispatch = useDispatch<AppDispatch>();
+    const [ targetDate, setTargetDate ] = useState<string>(task.targetDate ? new Date(task.targetDate).toISOString().split("T")[0] : "");
 
     const handleUpdate = async () => {
         setError("");
@@ -31,6 +32,7 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                 title,
                 description,
                 status,
+                targetDate: targetDate || null,
             },{ withCredentials: true });
             dispatch(updateTask(res?.data?.data));
             onClose();
@@ -84,6 +86,17 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                             <option value="in-progress">🔄 In Progress</option>
                             <option value="done">✅ Done</option>
                         </select>
+                    </label>
+
+                    <label className="my-2">
+                        <p className="text-sm mb-1">Target Date</p>
+                        <input
+                            type="date"
+                            className="input input-md w-full"
+                            value={targetDate}
+                            min={new Date().toISOString().split("T")[0]}
+                            onChange={(e) => setTargetDate(e.target.value)}
+                        />
                     </label>
 
                     {error && <p className="text-red-500 text-sm">{error}</p>}

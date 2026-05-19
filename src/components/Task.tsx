@@ -13,6 +13,7 @@ const TaskForm = () => {
     const [ status, setStatus ] = useState<"todo" | "in-progress" | "done">("todo");
     const [ success, setSuccess ] = useState<string>("");
     const navigate = useNavigate();
+    const [ targetDate, setTargetDate ] = useState<string>("");
 
     const handleTask = async () => {
         try {
@@ -20,6 +21,7 @@ const TaskForm = () => {
                 title,
                 description,
                 status,
+                targetDate: targetDate || null,
             }, {
                 withCredentials: true
             });
@@ -79,6 +81,17 @@ const TaskForm = () => {
                 </select>
             </label>
 
+            <label className="my-3 block">
+                <p className="text-sm mb-1">Target Date</p>
+                <input
+                    type="date"
+                    className="input input-md w-full"
+                    value={targetDate}
+                    min={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => setTargetDate(e.target.value)}
+                />
+            </label>
+
             <div className="mt-6 text-center">
                 <button
                     className="btn bg-blue-500 hover:bg-blue-600 text-white px-10 rounded-full"
@@ -86,10 +99,9 @@ const TaskForm = () => {
                 >
                     Submit
                 </button>
-                
             </div>
             <button
-                className="btn btn-ghost "
+                className="btn btn-ghost"
                 onClick={() => navigate("/")}
             >
                 ← Back to Tasks

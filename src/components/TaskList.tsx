@@ -19,18 +19,21 @@ const TaskList = () => {
     const [ toast, setToast ] = useState<string>("");
     const [ search, setSearch ] = useState<string>("");
     const [ loading, setLoading ] = useState<boolean>(true);
+    const [ sort, setSort ] = useState<string>("latest");
 
     const showToast = (message: string) => {
         setToast(message);
         setTimeout(() => setToast(""), 3000);
     };
 
-    const fetchTasks = async (searchQuery: string = "") => {
+    const fetchTasks = async (searchQuery: string = "", sortQuery: string = "latest") => {
         try {
             setLoading(true);
             setError("");
 
-            const url = searchQuery ? BASE_URL + "/all/tasks?search=" + searchQuery : BASE_URL + "/all/tasks";
+            let url = BASE_URL + "/all/tasks?";
+            if(sortQuery) url += `search=${searchQuery}&`;
+            url += `sort=${sortQuery}`;
 
             const res = await axios.get(url, {
                 withCredentials: true
@@ -45,6 +48,30 @@ const TaskList = () => {
         }finally{
             setLoading(false)
         }
+    };
+
+    const getDateStatus = (targetDate: string, status: string) => {
+        try {
+            if(status === "done") return null;
+
+            const today = new Date();
+            const target = new Date(targetDate);
+
+            today.setHours(0,0,0,0);
+            target.setHours(0,0,0,0);
+
+            if(target.getTime() === today.getTime()){
+                return <p className="text-yellow-500 text-xs mt-1">⏰ Due Today!</p>;
+            }else if(target < today ){
+                return <p className="text-red-500 text-xs mt-1">❌ Overdue!</p>;
+            }else{
+                return <p className="text-green-500 text-xs mt-1">✅ Due </p>;
+            }
+        }catch(err) {
+            if(axios.isAxiosError(err)){
+                setError(err.response?.data?.message || "Failed to fetch status");
+            };
+        };
     };
 
     const handleDelete = async (taskId: string) => {
@@ -71,10 +98,10 @@ const TaskList = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchTasks(search);
+            fetchTasks(search, sort);
         },500);
         return () => clearTimeout(timer);
-    }, [search]);
+    }, [search, sort]);
 
     useEffect(() => {
         fetchTasks();
@@ -114,8 +141,7 @@ const TaskList = () => {
                 ➕ Create your first task
             </Link>
         </div>
-    );
-}
+    )};
 
     return (
         <div className="max-w-5xl mx-auto my-10 px-4">
@@ -130,16 +156,32 @@ const TaskList = () => {
                 <h1 className="text-2xl font-bold">
                     📋 My Tasks ({tasks.length})
                 </h1>
-                <input
-                    type="text"
-                    placeholder="🔍 Search tasks..."
-                    className="input input-md w-full md:w-72 bg-base-200"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
-                <button className="btn p-4 py-2 bg-white hover:bg-base-100 text-black hover:text-white">
-                    <Link to="/task">📋Create Task</Link>
-                </button>
+                <div className="flex gap-2 items-center">
+                    <button
+                        className={`btn btn-sm rounded-full px-4 ${sort === "latest" ? "bg-blue-500 text-white" : "btn-ghost"}`}
+                        onClick={() => setSort("latest")}
+                    >
+                        🆕 Latest
+                    </button>
+                    <button
+                        className={`btn btn-sm rounded-full px-4 ${sort === "oldest" ? "bg-blue-500 text-white" : "btn-ghost"}`}
+                        onClick={() => setSort("oldest")}
+                    >
+                        📅 Oldest
+                    </button>
+                    <input
+                        type="text"
+                        placeholder="🔍 Search tasks..."
+                        className="input input-md w-full md:w-72 bg-base-200"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>  
+                <Link to="/task">  
+                    <button className="btn p-4 py-2 bg-base-300 text-white hover:bg-blue-500 rounded-full">
+                        📋Create Task
+                    </button>
+                </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tasks.map((task) => (
@@ -176,6 +218,13 @@ const TaskList = () => {
                             <p className="text-sm text-gray-400 mt-1">
                                 {task.description || "No description"}
                             </p>
+
+                            {task.targetDate && (
+                                <p className="text-xs text-white-100 mt-1">
+                                    🎯 Deadline: {new Date(task.targetDate).toLocaleDateString()}
+                                </p>
+                            )}
+                            {task.targetDate && getDateStatus(task.targetDate, task.status)}
 
                             <div className="card-actions justify-end mt-3">
                                 <button
