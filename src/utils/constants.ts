@@ -1,2 +1,2 @@
-const BASE_URL = "https://task-manager-backend-9zmt.onrender.com";
+const BASE_URL : string = import.meta.env.VITE_BASE_URL as string;
 export default BASE_URL;

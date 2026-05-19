@@ -137,7 +137,7 @@ const TaskList = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
-                <button className="btn btn-primary btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl">
+                <button className="btn p-4 py-2 bg-white hover:bg-base-100 text-black hover:text-white">
                     <Link to="/task">📋Create Task</Link>
                 </button>
             </div>

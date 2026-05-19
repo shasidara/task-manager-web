@@ -4,6 +4,7 @@ import BASE_URL from "../utils/constants";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../utils/appStore"; 
 import { addTask } from "../utils/taskSlice";
+import { useNavigate } from "react-router-dom";
 
 const TaskForm = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -11,6 +12,7 @@ const TaskForm = () => {
     const [ description, setDescription ] = useState<string>("");
     const [ status, setStatus ] = useState<"todo" | "in-progress" | "done">("todo");
     const [ success, setSuccess ] = useState<string>("");
+    const navigate = useNavigate();
 
     const handleTask = async () => {
         try {
@@ -84,7 +86,14 @@ const TaskForm = () => {
                 >
                     Submit
                 </button>
+                
             </div>
+            <button
+                className="btn btn-ghost "
+                onClick={() => navigate("/")}
+            >
+                ← Back to Tasks
+            </button>
 
             {success && (
                 <div className="toast toast-top toast-center">
