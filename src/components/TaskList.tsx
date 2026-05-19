@@ -179,7 +179,7 @@ const TaskList = () => {
                 </div>  
                 <Link to="/task">  
                     <button className="btn p-4 py-2 bg-base-300 text-white hover:bg-blue-500 rounded-full">
-                        📋Create Task
+                        ➕Create Task
                     </button>
                 </Link>
             </div>
