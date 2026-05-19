@@ -137,6 +137,9 @@ const TaskList = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
+                <button className="btn btn-primary btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl">
+                    <Link to="/task">📋Create Task</Link>
+                </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tasks.map((task) => (
