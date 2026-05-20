@@ -69,7 +69,6 @@ const Login = () => {
                         {isLoginForm ? "🔐 Login" : "📝 Sign Up"}
                     </h2>
 
-                    {/* Name field - only for signup */}
                     {!isLoginForm && (
                         <label className="my-2">
                             <p className="text-sm mb-1">Name</p>
@@ -83,7 +82,6 @@ const Login = () => {
                         </label>
                     )}
 
-                    {/* Email */}
                     <label className="my-2">
                         <p className="text-sm mb-1">Email</p>
                         <input
@@ -95,7 +93,6 @@ const Login = () => {
                         />
                     </label>
 
-                    {/* Password */}
                     <label className="my-2">
                         <p className="text-sm mb-1">Password</p>
                         <input

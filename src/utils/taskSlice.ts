@@ -10,7 +10,6 @@ const taskSlice = createSlice({
             state.push(action.payload);
         },
         setTask: (_state, action: PayloadAction<Task[]>) => {
-            // ✅ Make sure it's always an array
             return Array.isArray(action.payload) ? action.payload : [];
         },
         removeTask: (state, action: PayloadAction<string>) => {

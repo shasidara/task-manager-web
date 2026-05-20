@@ -20,11 +20,22 @@ const TaskList = () => {
     const [ search, setSearch ] = useState<string>("");
     const [ loading, setLoading ] = useState<boolean>(true);
     const [ sort, setSort ] = useState<string>("latest");
+    const [ filter, setFilter ] = useState<string>("all");
 
     const showToast = (message: string) => {
         setToast(message);
         setTimeout(() => setToast(""), 3000);
     };
+
+    const filteredTasks = tasks.filter((task) => {
+        if(filter === "all") return true;
+        return task.status === filter;
+    });
+
+    const taskCount = tasks.reduce((acc, task) => {
+        acc[task.status] = (acc[task.status] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
 
     const fetchTasks = async (searchQuery: string = "", sortQuery: string = "latest") => {
         try {
@@ -50,6 +61,28 @@ const TaskList = () => {
         }
     };
 
+    const handleDelete = async (taskId: string) => {
+        const confirmed = window.confirm("Are you sure want to delete this task?");
+        if(!confirmed) return;
+        try{
+            setDeletingId(taskId);
+
+            dispatch(removeTask(taskId));
+
+            await axios.delete(BASE_URL + "/delete/task/" + taskId, {
+                withCredentials: true
+            });
+            showToast("Task deleted successfully");
+        }catch(err) {
+            fetchTasks();
+            if(axios.isAxiosError(err)){
+                showToast(err.response?.data?.message || "Failed to delete task");
+            };
+        } finally{
+            setDeletingId(null);
+        };
+    };
+
     const getDateStatus = (targetDate: string, status: string) => {
         try {
             if(status === "done") return null;
@@ -71,28 +104,6 @@ const TaskList = () => {
             if(axios.isAxiosError(err)){
                 setError(err.response?.data?.message || "Failed to fetch status");
             };
-        };
-    };
-
-    const handleDelete = async (taskId: string) => {
-        const confirmed = window.confirm("Are you sure want to delete this task?");
-        if(!confirmed) return;
-        try{
-            setDeletingId(taskId);
-
-            dispatch(removeTask(taskId));
-
-            await axios.delete(BASE_URL + "/delete/task/" + taskId, {
-                withCredentials: true
-            });
-            showToast("Task deleted successfully");
-        }catch(err) {
-            fetchTasks();
-            if(axios.isAxiosError(err)){
-                showToast(err.response?.data?.message || "Failed to delete task");
-            };
-        } finally{
-            setDeletingId(null);
         };
     };
 
@@ -179,12 +190,65 @@ const TaskList = () => {
                 </div>  
                 <Link to="/task">  
                     <button className="btn p-4 py-2 bg-base-300 text-white hover:bg-blue-500 rounded-full">
-                        ➕Create Task
+                        ➕ Create Task
                     </button>
                 </Link>
             </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div
+                    className={`card p-4 text-center cursor-pointer rounded-2xl shadow-md transition-all ${
+                        filter === "all" ? "bg-blue-500 text-white" : "bg-base-300"
+                    }`}
+                    onClick={() => setFilter("all")}
+                >
+                    <p className="text-2xl font-bold">{tasks.length}</p>
+                    <p className="text-sm">📋 All</p>
+                </div>
+                <div
+                    className={`card p-4 text-center cursor-pointer rounded-2xl shadow-md transition-all ${
+                        filter === "todo" ? "bg-blue-500 text-white" : "bg-base-300"
+                    }`}
+                    onClick={() => setFilter("todo")}
+                    >
+                    <p className="text-2xl font-bold">{taskCount["todo"] || 0}</p>
+                    <p className="text-sm">📝 Todo</p>
+                </div>
+                <div
+                    className={`card p-4 text-center cursor-pointer rounded-2xl shadow-md transition-all ${
+                        filter === "in-progress" ? "bg-yellow-500 text-white" : "bg-base-300"
+                    }`}
+                    onClick={() => setFilter("in-progress")}
+                >
+                    <p className="text-2xl font-bold">{taskCount["in-progress"] || 0}</p>
+                    <p className="text-sm">🔄 In Progress</p>
+                </div>
+                <div
+                    className={`card p-4 text-center cursor-pointer rounded-2xl shadow-md transition-all ${
+                        filter === "done" ? "bg-green-500 text-white" : "bg-base-300"
+                    }`}
+                    onClick={() => setFilter("done")}
+                    >
+                    <p className="text-2xl font-bold">{taskCount["done"] || 0}</p>
+                    <p className="text-sm">✅ Done</p>
+                </div>
+            </div>
+
+            {filteredTasks.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-40 gap-2">
+                    <p className="text-gray-400 text-lg">
+                        {filter === "all" ? "No tasks yet!" : `No ${filter} tasks found!`}
+                    </p>
+                    {filter === "all" && (
+                        <Link to="/task" className="btn bg-blue-500 text-white rounded-full px-6">
+                            ➕ Create your first task
+                        </Link>
+                    )}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {tasks.map((task) => (
+                {filteredTasks.map((task) => (
                     <div
                         key={task._id}
                         className="card bg-base-300 shadow-md rounded-2xl hover:shadow-xl transition-all"

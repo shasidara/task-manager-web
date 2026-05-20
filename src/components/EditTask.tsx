@@ -19,6 +19,7 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
     const [ error, setError ] = useState<string>("");
     const dispatch = useDispatch<AppDispatch>();
     const [ targetDate, setTargetDate ] = useState<string>(task.targetDate ? new Date(task.targetDate).toISOString().split("T")[0] : "");
+    const [ success, setSuccess ] = useState<string>("");
 
     const handleUpdate = async () => {
         setError("");
@@ -36,7 +37,7 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
             },{ withCredentials: true });
             dispatch(updateTask(res?.data?.data));
             onClose();
-
+            setSuccess("Saved Changes successfully");
         }catch (err) {
             if(axios.isAxiosError(err)) {
                 setError(err?.response?.data?.message || "Failed to update task");
@@ -114,6 +115,13 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                         >
                             Save Changes
                         </button>
+                        {success && (
+                            <div className="toast toast-top toast-center">
+                                <div className="alert alert-success">
+                                    <span>Saved Changes Successfully!.</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

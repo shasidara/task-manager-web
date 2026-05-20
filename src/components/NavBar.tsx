@@ -24,14 +24,12 @@ const NavBar = () => {
 
     return (
         <div className="navbar bg-base-300 shadow-sm px-6">
-            {/* Left - Logo */}
             <div className="flex-1">
                 <Link to="/" className="btn btn-ghost text-xl">
                     📝 Task Manager
                 </Link>
             </div>
 
-            {/* Right - User info + Logout */}
             {user && (
                 <div className="flex items-center gap-4">
                     <p className="text-sm">Welcome, {user.name}!</p>
@@ -53,7 +51,7 @@ const NavBar = () => {
                         >
                             
                             <li>
-                                <a onClick={handleLogout} className="text-red-400">
+                                <a onClick={handleLogout} className="text-red-500">
                                     Logout
                                 </a>
                             </li>
@@ -62,7 +60,6 @@ const NavBar = () => {
                 </div>
             )}
 
-            {/* Show login button if not logged in */}
             {!user && (
                 <Link to="/login" className="btn bg-blue-500 text-white rounded-full px-6">
                     Login
