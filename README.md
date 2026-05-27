@@ -41,7 +41,7 @@ task-manager-web/
 │   │   ├── userSlice.ts      # User state slice
 │   │   ├── taskSlice.ts      # Tasks state slice
 │   │   ├── types.ts          # TypeScript interfaces
-│   │   └── constants.ts      # Base URL and constants
+│   │   └── constants.ts      # Base URL, labels and constants
 │   ├── App.tsx               # Routes configuration
 │   └── main.tsx              # Entry point
 ├── .env                      # Production environment variables
@@ -93,9 +93,12 @@ npm run preview
 
 ### Task Management
 - ✅ Create task with title, description, status and target date
+- ✅ Set priority level — Low, Medium, High (radio buttons)
+- ✅ Add labels/tags — Urgent, Bug, Feature, Improvement, Design, Research (checkboxes)
+- ✅ Upload any file as attachment (images, documents, etc.)
 - ✅ View all tasks in card grid layout
-- ✅ View single task detail page
-- ✅ Edit task with pre-filled modal form
+- ✅ View single task detail page with priority, labels and attachments
+- ✅ Edit task with pre-filled modal form including priority, labels and attachments
 - ✅ Delete task with confirmation alert
 
 ### Filter & Search
@@ -183,7 +186,7 @@ store = {
 - Task cards with deadline indicators
 
 ### Create Task
-- Title, description, status and target date fields
+- Title, description, status, target date, priority, labels and attachments fields
 - Form validation
 - Success toast notification
 
