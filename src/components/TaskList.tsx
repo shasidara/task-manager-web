@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { AppDispatch, RootState } from "../utils/appStore";
 import { setTask, removeTask } from "../utils/taskSlice";
-import BASE_URL from "../utils/constants";
+import { BASE_URL } from "../utils/constants";
 import type { Task } from "../utils/types";
 import EditTaskModal from "./EditTask";
 import { Link } from "react-router-dom";

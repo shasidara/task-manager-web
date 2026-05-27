@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../utils/appStore";
 import { removeUser } from "../utils/userSlice";
 import axios from "axios";
-import BASE_URL from "../utils/constants";
+import { BASE_URL } from "../utils/constants";
 
 const NavBar = () => {
     const user = useSelector((store: RootState) => store.user);

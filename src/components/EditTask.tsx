@@ -4,8 +4,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "../utils/appStore";
 import { updateTask } from "../utils/taskSlice";
-import BASE_URL from "../utils/constants";
-
+import { BASE_URL, LABELS, PRIORITY_OPTIONS } from "../utils/constants";
 
 interface EditTaskProps {
     task: Task;
@@ -17,37 +16,68 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
     const [ description, setDescription ] = useState<string>(task.description || "");
     const [ status, setStatus ] = useState<"to-do" | "in-progress" | "done">(task.status);
     const [ error, setError ] = useState<string>("");
-    const dispatch = useDispatch<AppDispatch>();
-    const [ targetDate, setTargetDate ] = useState<string>(task.targetDate ? new Date(task.targetDate).toISOString().split("T")[0] : "");
     const [ success, setSuccess ] = useState<string>("");
+    const [ loading, setLoading ] = useState<boolean>(false);
+    const [ targetDate, setTargetDate ] = useState<string>(
+        task.targetDate ? new Date(task.targetDate).toISOString().split("T")[0] : ""
+    );
+    const [ priority, setPriority ] = useState<"low" | "medium" | "high">(task.priority || "medium");
+    const [ labels, setLabels ] = useState<string[]>(task.labels || []);
+    const [ files, setFiles ] = useState<FileList | null>(null);
+    const dispatch = useDispatch<AppDispatch>();
+
+    const toggleLabel = (label: string) => {
+        setLabels((prev) =>
+            prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+        );
+    };
 
     const handleUpdate = async () => {
         setError("");
-        if(!title){
+        if (!title.trim()) {
             setError("Title is required");
             return;
         }
 
         try {
-            const res = await axios.put(BASE_URL + "/update/task/" + task._id, {
-                title,
-                description,
-                status,
-                targetDate: targetDate || null,
-            },{ withCredentials: true });
+            setLoading(true);
+
+            const formData = new FormData();
+            formData.append("title", title);
+            formData.append("description", description);
+            formData.append("status", status);
+            formData.append("targetDate", targetDate || "");
+            formData.append("priority", priority);
+            formData.append("labels", JSON.stringify(labels));
+
+            if (files) {
+                Array.from(files).forEach((file) => {
+                    formData.append("attachments", file);
+                });
+            }
+
+            const res = await axios.put(BASE_URL + "/update/task/" + task._id, formData, {
+                withCredentials: true,
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
             dispatch(updateTask(res?.data?.data));
-            onClose();
-            setSuccess("Saved Changes successfully");
-        }catch (err) {
-            if(axios.isAxiosError(err)) {
+            setSuccess("Saved Changes Successfully!");
+            setTimeout(() => {
+                onClose();
+            }, 1500);
+        } catch(err) {
+            if (axios.isAxiosError(err)) {
                 setError(err?.response?.data?.message || "Failed to update task");
-            };
-        };
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
-    return(
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="card bg-base-300 w-96 shadow-xl rounded-2xl">
+    return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-y-auto py-6">
+            <div className="card bg-base-300 w-full max-w-md shadow-xl rounded-2xl mx-4">
                 <div className="card-body">
                     <h2 className="card-title justify-between">
                         ✏️ Edit Task
@@ -58,7 +88,8 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                             ✕
                         </button>
                     </h2>
-                    <label className="my-2">
+
+                    <label className="my-2 block">
                         <p className="text-sm mb-1">Title <span className="text-red-500">*</span></p>
                         <input
                             type="text"
@@ -67,7 +98,8 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                             onChange={(e) => setTitle(e.target.value)}
                         />
                     </label>
-                    <label className="my-2">
+
+                    <label className="my-2 block">
                         <p className="text-sm mb-1">Description</p>
                         <textarea
                             className="textarea w-full"
@@ -76,7 +108,8 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                             onChange={(e) => setDescription(e.target.value)}
                         />
                     </label>
-                    <label className="my-2">
+
+                    <label className="my-2 block">
                         <p className="text-sm mb-1">Status</p>
                         <select
                             className="select select-md w-full"
@@ -89,7 +122,7 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                         </select>
                     </label>
 
-                    <label className="my-2">
+                    <label className="my-2 block">
                         <p className="text-sm mb-1">Target Date</p>
                         <input
                             type="date"
@@ -100,9 +133,83 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                         />
                     </label>
 
+                    <div className="my-2">
+                        <p className="text-sm mb-2">Priority</p>
+                        <div className="flex gap-5 flex-wrap">
+                            {PRIORITY_OPTIONS.map((opt) => (
+                                <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="edit-priority"
+                                        className="radio radio-sm radio-primary"
+                                        value={opt.value}
+                                        checked={priority === opt.value}
+                                        onChange={() => setPriority(opt.value as "low" | "medium" | "high")}
+                                    />
+                                    <span className="text-sm">{opt.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="my-2">
+                        <p className="text-sm mb-2">Labels</p>
+                        <div className="flex flex-wrap gap-3">
+                            {LABELS.map((label) => (
+                                <label key={label} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="checkbox checkbox-sm checkbox-primary"
+                                        checked={labels.includes(label)}
+                                        onChange={() => toggleLabel(label)}
+                                    />
+                                    <span className="text-sm">{label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="my-2">
+                        <p className="text-sm mb-2">Add Attachments</p>
+                        <input
+                            type="file"
+                            className="file-input file-input-md w-full"
+                            multiple
+                            onChange={(e) => setFiles(e.target.files)}
+                        />
+
+                        {task.attachments && task.attachments.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                                <p className="text-xs text-gray-400">Existing files:</p>
+                                {task.attachments.map((file, i) => (
+                                    <a
+                                        key={i}
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-400 hover:underline block"
+                                    >
+                                        📎 {file.originalName}
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+
+                        {files && files.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                                <p className="text-xs text-gray-400">New files:</p>
+                                {Array.from(files).map((file, i) => (
+                                    <p key={i} className="text-xs text-gray-400">
+                                        📎 {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                                    </p>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                     {error && <p className="text-red-500 text-sm">{error}</p>}
 
-                     <div className="card-actions justify-end mt-4 gap-2">
+                    <div className="card-actions justify-end mt-4 gap-2">
                         <button
                             className="btn btn-ghost rounded-full px-6"
                             onClick={onClose}
@@ -112,17 +219,19 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                         <button
                             className="btn bg-blue-500 hover:bg-blue-600 text-white rounded-full px-6"
                             onClick={handleUpdate}
+                            disabled={loading}
                         >
-                            Save Changes
+                            {loading ? <span className="loading loading-spinner loading-sm" /> : "Save Changes"}
                         </button>
-                        {success && (
-                            <div className="toast toast-top toast-center">
-                                <div className="alert alert-success">
-                                    <span>Saved Changes Successfully!.</span>
-                                </div>
-                            </div>
-                        )}
                     </div>
+
+                    {success && (
+                        <div className="toast toast-top toast-center">
+                            <div className="alert alert-success">
+                                <span>{success}</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

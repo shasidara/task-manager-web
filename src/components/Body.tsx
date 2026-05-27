@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import NavBar from "./NavBar";
 import axios from "axios";
-import BASE_URL from "../utils/constants";
+import { BASE_URL } from "../utils/constants";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../utils/appStore";
 import { addUser } from "../utils/userSlice";

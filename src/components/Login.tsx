@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { AppDispatch } from "../utils/appStore";
 import { addUser } from "../utils/userSlice";
-import BASE_URL from "../utils/constants";
+import { BASE_URL } from "../utils/constants";
 
 const Login = () => {
     const [email, setEmail] = useState<string>("");

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
-import BASE_URL from "../utils/constants";
+import { BASE_URL, LABELS, PRIORITY_OPTIONS } from "../utils/constants";
 import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../utils/appStore"; 
+import type { AppDispatch } from "../utils/appStore";
 import { addTask } from "../utils/taskSlice";
 import { useNavigate } from "react-router-dom";
 
@@ -12,30 +12,66 @@ const TaskForm = () => {
     const [ description, setDescription ] = useState<string>("");
     const [ status, setStatus ] = useState<"todo" | "in-progress" | "done">("todo");
     const [ success, setSuccess ] = useState<string>("");
+    const [ error, setError ] = useState<string>("");
+    const [ loading, setLoading ] = useState<boolean>(false);
     const navigate = useNavigate();
     const [ targetDate, setTargetDate ] = useState<string>("");
+    const [ priority, setPriority ] = useState<"low" | "medium" | "high">("medium");
+    const [ labels, setLabels ] = useState<string[]>([]);
+    const [ files, setFiles ] = useState<FileList | null>(null);
+
+    const toggleLabel = (label: string) => {
+        setLabels((prev) =>
+            prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+        );
+    };
 
     const handleTask = async () => {
+        setError("");
+        if (!title.trim()) {
+            setError("Title is required");
+            return;
+        }
+
         try {
-            const res = await axios.post(BASE_URL + "/task", {
-                title,
-                description,
-                status,
-                targetDate: targetDate || null,
-            }, {
-                withCredentials: true
+            setLoading(true);
+
+            const formData = new FormData();
+            formData.append("title", title);
+            formData.append("description", description);
+            formData.append("status", status);
+            formData.append("targetDate", targetDate || "");
+            formData.append("priority", priority);
+            formData.append("labels", JSON.stringify(labels));
+
+            if (files) {
+                Array.from(files).forEach((file) => {
+                    formData.append("attachments", file);
+                });
+            }
+
+            const res = await axios.post(BASE_URL + "/task", formData, {
+                withCredentials: true,
+                headers: { "Content-Type": "multipart/form-data" },
             });
+
             dispatch(addTask(res?.data?.data));
             setTitle("");
             setDescription("");
             setStatus("todo");
+            setTargetDate("");
+            setPriority("medium");
+            setLabels([]);
+            setFiles(null);
             setSuccess("Task Created Successfully!");
             setTimeout(() => setSuccess(""), 3000);
-        }catch(err) {
-            if(err instanceof Error) {
-                console.log("ERROR: " + err.message);
+        } catch(err) {
+            if (axios.isAxiosError(err)) {
+                setError(err?.response?.data?.message || "Failed to create task");
             }
-        };
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -92,16 +128,75 @@ const TaskForm = () => {
                 />
             </label>
 
+            <div className="my-3">
+                <p className="text-sm mb-2">Priority</p>
+                <div className="flex gap-5 flex-wrap">
+                    {PRIORITY_OPTIONS.map((opt) => (
+                        <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="priority"
+                                className="radio radio-sm radio-primary"
+                                value={opt.value}
+                                checked={priority === opt.value}
+                                onChange={() => setPriority(opt.value as "low" | "medium" | "high")}
+                            />
+                            <span className="text-sm">{opt.label}</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            <div className="my-3">
+                <p className="text-sm mb-2">Labels</p>
+                <div className="flex flex-wrap gap-3">
+                    {LABELS.map((label) => (
+                        <label key={label} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="checkbox checkbox-sm checkbox-primary"
+                                checked={labels.includes(label)}
+                                onChange={() => toggleLabel(label)}
+                            />
+                            <span className="text-sm">{label}</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            <div className="my-3">
+                <p className="text-sm mb-2">Attachments</p>
+                <input
+                    type="file"
+                    className="file-input file-input-md w-full"
+                    multiple
+                    onChange={(e) => setFiles(e.target.files)}
+                />
+                {files && files.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                        {Array.from(files).map((file, i) => (
+                            <p key={i} className="text-xs text-gray-400">
+                                📎 {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                            </p>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
             <div className="mt-6 text-center">
                 <button
                     className="btn bg-blue-500 hover:bg-blue-600 text-white px-10 rounded-full"
                     onClick={handleTask}
+                    disabled={loading}
                 >
-                    Submit
+                    {loading ? <span className="loading loading-spinner loading-sm" /> : "Submit"}
                 </button>
             </div>
+
             <button
-                className="btn btn-ghost"
+                className="btn btn-ghost mt-2"
                 onClick={() => navigate("/")}
             >
                 ← Back to Tasks
@@ -110,7 +205,7 @@ const TaskForm = () => {
             {success && (
                 <div className="toast toast-top toast-center">
                     <div className="alert alert-success">
-                        <span>Task Created Successfully!.</span>
+                        <span>{success}</span>
                     </div>
                 </div>
             )}
