@@ -283,6 +283,35 @@ const TaskList = () => {
                                 {task.description || "No description"}
                             </p>
 
+                            {task.priority && (
+                                <div className="mt-2">
+                                    <span className={`badge text-xs font-semibold ${
+                                        task.priority === "high"
+                                            ? "badge-ghost"
+                                            : task.priority === "medium"
+                                            ? "badge-ghost"
+                                            : "badge-ghost"
+                                    }`}>
+                                        {task.priority === "high" ? "🔴 High"
+                                            : task.priority === "medium" ? "🟡 Medium"
+                                            : "🟢 Low"}
+                                    </span>
+                                </div>
+                            )}
+
+                            {task.labels && task.labels.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                    {task.labels.map((label) => (
+                                        <span
+                                            key={label}
+                                            className="badge badge-outline badge-primary text-xs"
+                                        >
+                                            {label}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
                             {task.targetDate && (
                                 <p className="text-xs text-white-100 mt-1">
                                     🎯 Deadline: {new Date(task.targetDate).toLocaleDateString()}

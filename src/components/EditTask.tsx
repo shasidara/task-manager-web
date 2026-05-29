@@ -26,11 +26,16 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
     const [ files, setFiles ] = useState<FileList | null>(null);
     const dispatch = useDispatch<AppDispatch>();
     const [ fileError, setFileError ] = useState<string>("");
+    const [ deletedAttachments, setDeletedAttachments ] = useState<string[]>([]);
 
     const toggleLabel = (label: string) => {
         setLabels((prev) =>
             prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
         );
+    };
+
+    const handleDeleteAttachment = (url: string) => {
+        setDeletedAttachments((prev) => [...prev, url]);
     };
 
     const handleUpdate = async () => {
@@ -50,6 +55,7 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
             formData.append("targetDate", targetDate || "");
             formData.append("priority", priority);
             formData.append("labels", JSON.stringify(labels));
+            formData.append("deletedAttachments", JSON.stringify(deletedAttachments));
 
             if (files) {
                 Array.from(files).forEach((file) => {
@@ -92,7 +98,12 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                         </h2>
 
                         <label className="my-2 block">
-                            <p className="text-sm mb-1">Title <span className="text-red-500">*</span></p>
+                            <div className="flex justify-between items-center mb-1">
+                                <p className="text-sm">Title <span className="text-red-500">*</span></p>
+                                <p className={`text-xs ${title.length > 90 ? "text-red-500" : "text-gray-400"}`}>
+                                    {title.length}/100
+                                </p>
+                            </div>
                             <input
                                 type="text"
                                 className={`input input-md w-full ${error ? "border-red-500 border-2" : ""}`}
@@ -103,7 +114,12 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                         </label>
 
                         <label className="my-2 block">
-                            <p className="text-sm mb-1">Description</p>
+                            <div className="flex justify-between items-center mb-1">
+                                <p className="text-sm">Description</p>
+                                <p className={`text-xs ${description.length > 450 ? "text-red-500" : "text-gray-400"}`}>
+                                    {description.length}/500
+                                </p>
+                            </div>
                             <textarea
                                 className="textarea w-full"
                                 rows={3}
@@ -202,20 +218,29 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                             {task.attachments && task.attachments.length > 0 && (
                                 <div className="mt-2 space-y-1">
                                     <p className="text-xs text-gray-400">Existing files:</p>
-                                    {task.attachments.map((file, i) => (
-                                        <a
-                                            key={i}
-                                            href={file.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-xs text-blue-400 hover:underline block"
-                                        >
-                                            📎 {file.originalName}
-                                        </a>
-                                    ))}
+                                    {task.attachments
+                                        .filter((file) => !deletedAttachments.includes(file.url))
+                                        .map((file, i) => (
+                                            <div key={i} className="flex items-center justify-between gap-2">
+                                                <a
+                                                    href={file.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs text-blue-400 hover:underline"
+                                                >
+                                                    📎 {file.originalName}
+                                                </a>
+                                                <button
+                                                    className="btn btn-ghost btn-xs text-red-500 hover:text-red-700"
+                                                    onClick={() => handleDeleteAttachment(file.url)}
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        ))}
                                 </div>
                             )}
-                            
+
                             {fileError && <p className="text-red-500 text-sm mt-1">⚠️ {fileError}</p>}
                             {files && files.length > 0 && (
                                 <div className="mt-2 space-y-1">

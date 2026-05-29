@@ -82,9 +82,12 @@ const TaskForm = () => {
             </h2>
 
             <label className="my-3 block">
-                <p className="text-sm mb-1">
-                    Title <span className="text-red-500">*</span>
-                </p>
+                <div className="flex justify-between items-center mb-1">
+                    <p className="text-sm">Title <span className="text-red-500">*</span></p>
+                    <p className={`text-xs ${title.length > 90 ? "text-red-500" : "text-gray-400"}`}>
+                        {title.length}/100
+                    </p>
+                </div>
                 <input
                     type="text"
                     className={`input input-md w-full ${error ? "border-red-500 border-2" : ""}`}
@@ -99,7 +102,12 @@ const TaskForm = () => {
             </label>
 
             <label className="my-3 block">
-                <p className="text-sm mb-1">Description</p>
+                <div className="flex justify-between items-center mb-1">
+                    <p className="text-sm">Description</p>
+                    <p className={`text-xs ${description.length > 450 ? "text-red-500" : "text-gray-400"}`}>
+                        {description.length}/500
+                    </p>
+                </div>
                 <textarea
                     className="textarea w-full"
                     rows={3}
