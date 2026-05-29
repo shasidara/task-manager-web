@@ -19,6 +19,7 @@ const TaskForm = () => {
     const [ priority, setPriority ] = useState<"low" | "medium" | "high">("medium");
     const [ labels, setLabels ] = useState<string[]>([]);
     const [ files, setFiles ] = useState<FileList | null>(null);
+    const [ fileError, setFileError ] = useState<string>("");
 
     const toggleLabel = (label: string) => {
         setLabels((prev) =>
@@ -86,11 +87,15 @@ const TaskForm = () => {
                 </p>
                 <input
                     type="text"
-                    className="input input-md w-full"
+                    className={`input input-md w-full ${error ? "border-red-500 border-2" : ""}`}
                     placeholder="Enter task title"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => { 
+                        setTitle(e.target.value);
+                        if(e.target.value.trim()) setError("");
+                    }}
                 />
+                {error && <p className="text-red-500 text-sm mt-1">⚠️ {error}</p>}
             </label>
 
             <label className="my-3 block">
@@ -170,8 +175,27 @@ const TaskForm = () => {
                     type="file"
                     className="file-input file-input-md w-full"
                     multiple
-                    onChange={(e) => setFiles(e.target.files)}
+                    onChange={(e) => {
+                        const selectedFiles = e.target.files;
+                        if(!selectedFiles) return;
+
+                        const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"];
+                        const invalidFiles = Array.from(selectedFiles).filter(
+                            (file) => !allowedTypes.includes(file.type)
+                        );
+
+                        if(invalidFiles.length > 0) {
+                            setFileError("Only images (JPG, PNG, GIF, WEBP) and PDF files are allowed");
+                            e.target.value = "";
+                            setFiles(null);
+                            return;
+                        };
+
+                        setFileError("");
+                        setFiles(selectedFiles);
+                    }}
                 />
+                {fileError && <p className="text-red-500 text-sm mt-1">⚠️ {fileError}</p>}
                 {files && files.length > 0 && (
                     <div className="mt-2 space-y-1">
                         {Array.from(files).map((file, i) => (
@@ -182,8 +206,6 @@ const TaskForm = () => {
                     </div>
                 )}
             </div>
-
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
             <div className="mt-6 text-center">
                 <button

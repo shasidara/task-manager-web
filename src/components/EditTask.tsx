@@ -25,6 +25,7 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
     const [ labels, setLabels ] = useState<string[]>(task.labels || []);
     const [ files, setFiles ] = useState<FileList | null>(null);
     const dispatch = useDispatch<AppDispatch>();
+    const [ fileError, setFileError ] = useState<string>("");
 
     const toggleLabel = (label: string) => {
         setLabels((prev) =>
@@ -94,10 +95,11 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                             <p className="text-sm mb-1">Title <span className="text-red-500">*</span></p>
                             <input
                                 type="text"
-                                className="input input-md w-full"
+                                className={`input input-md w-full ${error ? "border-red-500 border-2" : ""}`}
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                             />
+                            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                         </label>
 
                         <label className="my-2 block">
@@ -176,7 +178,25 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                                 type="file"
                                 className="file-input file-input-md w-full"
                                 multiple
-                                onChange={(e) => setFiles(e.target.files)}
+                                onChange={(e) => {
+                                    const selectedFiles = e.target.files;
+                                    if(!selectedFiles) return;
+
+                                    const allowedFiles = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"];
+                                    const invalidFiles = Array.from(selectedFiles).filter(
+                                        (file) => !allowedFiles.includes(file.type)
+                                    );
+
+                                    if(invalidFiles.length > 0) {
+                                        setFileError("Only images (JPG, PNG, GIF, WEBP) and PDF files are allowed");
+                                        e.target.value="";
+                                        setFiles(null);
+                                        return;
+                                    };
+
+                                    setFileError("");
+                                    setFiles(selectedFiles);
+                                }}
                             />
 
                             {task.attachments && task.attachments.length > 0 && (
@@ -195,7 +215,8 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                                     ))}
                                 </div>
                             )}
-
+                            
+                            {fileError && <p className="text-red-500 text-sm mt-1">⚠️ {fileError}</p>}
                             {files && files.length > 0 && (
                                 <div className="mt-2 space-y-1">
                                     <p className="text-xs text-gray-400">New files:</p>
@@ -207,8 +228,6 @@ const EditTask = ({ task, onClose }: EditTaskProps) => {
                                 </div>
                             )}
                         </div>
-
-                        {error && <p className="text-red-500 text-sm">{error}</p>}
 
                         <div className="card-actions justify-end mt-4 gap-2">
                             <button
